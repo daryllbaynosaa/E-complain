@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import LoginForm from '@/components/auth/LoginForm.vue'
 
 const theme = ref('light')
 
@@ -8,7 +9,7 @@ function onClick() {
 }
 </script>
 <template>
-  <v-responsive class="border rounded">
+  <v-responsive>
     <v-app :theme="theme">
       <v-app-bar
         class="px-3"
@@ -36,21 +37,17 @@ function onClick() {
                 </v-card-title>
 
                 <v-card-text class="bg-surface-light pt-4">
+                  <LoginForm></LoginForm>
+                  <!-- LOGIN FORM SLOT -->
+
                   <v-divider class="my-5"></v-divider>
-                  <v-form fast-fail @submit.prevent>
-                    <v-text-field label="email" variant="outlined"></v-text-field>
-
-                    <v-text-field label="password" variant="outlined"></v-text-field>
-
-                    <v-btn class="mt-2" type="submit" prepend-icon="mdi-login" block> login </v-btn>
-                  </v-form>
                 </v-card-text>
               </v-card>
             </v-col>
           </v-row>
         </v-container>
       </v-main>
-      <v-footer border app>@2025 Barangay Complain System</v-footer>
+      <v-footer class="font weight-bold" border app>@2025 Barangay Complain System</v-footer>
     </v-app>
   </v-responsive>
 </template>
