@@ -1,53 +1,93 @@
-<script setup>
-import { ref } from 'vue'
-import LoginForm from '@/components/auth/LoginForm.vue'
-
-const theme = ref('light')
-
-function onClick() {
-  theme.value = theme.value === 'light' ? 'dark' : 'light'
-}
-</script>
 <template>
-  <v-responsive>
-    <v-app :theme="theme">
-      <v-app-bar
-        class="px-3"
-        :color="theme === 'light' ? 'grey-lighten-1' : 'grey-darken-3'"
-        border
-      >
-        <v-spacer></v-spacer>
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
+  <br />
 
-        <v-btn
-          :icon="theme === 'light' ? 'mdi-weather-sunny' : 'mdi-weather-night'"
-          variant="elevated"
-          slim
-          @click="onClick"
-        ></v-btn>
-      </v-app-bar>
+  <!-- Title Text -->
+  <div class="text-center main-title mb-6">
+    <h1 class="display-1">BARANGAY COMPLAINS AND REPORT SYSTEM</h1>
+  </div>
 
-      <v-main>
-        <v-container>
-          <v-row class="d-flex justify-center">
-            <v-col cols="12" md="6">
-              <v-card class="mx-auto" prepend-icon="">
-                <v-card-title class="text-center">
-                  <span class="font-weight-black">E-Complain</span>
-                  <P>login form</P>
-                </v-card-title>
+  <v-container class="fill-height d-flex flex-column justify-center align-center">
+    <!-- Login Button -->
+    <v-row justify="center" class="w-100">
+      <v-col cols="12" md="4" sm="6">
+        <router-link to="/login2" class="text-decoration-none">
+          <v-btn rounded="xl" size="large" class="glass-btn elevation-10" block> Login </v-btn>
+        </router-link>
+      </v-col>
+    </v-row>
 
-                <v-card-text class="bg-surface-light pt-4">
-                  <LoginForm></LoginForm>
-                  <!-- LOGIN FORM SLOT -->
-
-                  <v-divider class="my-5"></v-divider>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-main>
-      <v-footer class="font weight-bold" border app>@2025 Barangay Complain System</v-footer>
-    </v-app>
-  </v-responsive>
+    <!-- Create Account Button -->
+    <v-row justify="center" class="w-100 mt-4">
+      <v-col cols="12" md="4" sm="6">
+        <router-link to="/signup" class="text-decoration-none">
+          <v-btn rounded="xl" size="large" class="glass-btn elevation-10" block>
+            Create Account
+          </v-btn>
+        </router-link>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
+
+<style>
+/* Global styles */
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh; /* Ensure the full height of the page */
+  background-image: url('@/assets/Login2Background.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Custom Title Style */
+.main-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6); /* Slight shadow to make text stand out */
+}
+
+/* Glass effect for buttons */
+.glass-btn {
+  background: rgba(255, 255, 255, 0.2); /* Semi-transparent white background */
+  backdrop-filter: blur(8px); /* Frosted glass effect */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Slight border */
+  color: white; /* Text color */
+  font-weight: bold; /* Bold text */
+  letter-spacing: 1px; /* Spacing between letters */
+  transition:
+    transform 0.3s ease,
+    background-color 0.3s ease; /* Smooth hover transition */
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.3); /* Slightly more opaque on hover */
+  transform: translateY(-4px); /* Slight lift on hover */
+}
+
+/* Responsive Title Adjustment */
+@media (max-width: 600px) {
+  .main-title {
+    font-size: 1.5rem; /* Adjust title size for small screens */
+  }
+}
+</style>
