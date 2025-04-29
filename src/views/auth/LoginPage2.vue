@@ -76,7 +76,7 @@
       </v-form>
 
       <v-card-text class="text-center">
-        <router-link to="/signup" class="text-blue text-decoration-none">
+        <router-link to="/signup" class="text-primary text-decoration-none">
           Sign up now <v-icon icon="mdi-chevron-right"></v-icon>
         </router-link>
       </v-card-text>
