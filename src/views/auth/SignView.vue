@@ -141,124 +141,150 @@ const handleRegister = async () => {
 
 <template>
   <div class="register-container">
-    <div class="register-card">
-      <div class="register-header">
-        <h1>Create an Account</h1>
-        <p>Join us today and get started with your new account</p>
-      </div>
+    <!-- Left: Register Form -->
+    <div class="register-content">
+      <div class="register-card">
+        <div class="register-header">
+          <h1>Create an Account</h1>
+          <p>Join us today and get started with your new account</p>
+        </div>
 
-      <!-- Success message -->
-      <div v-if="successMessage" class="alert alert-success">
-        <p>{{ successMessage }}</p>
-        <div v-if="emailConfirmationSent" class="mt-2"><strong>User ID:</strong> {{ userId }}</div>
-      </div>
+        <!-- Success message -->
+        <div v-if="successMessage" class="alert alert-success">
+          <p>{{ successMessage }}</p>
+          <div v-if="emailConfirmationSent" class="mt-2">
+            <strong>User ID:</strong> {{ userId }}
+          </div>
+        </div>
 
-      <!-- Error message -->
-      <div v-if="errorMessage" class="alert alert-error">
-        {{ errorMessage }}
-      </div>
+        <!-- Error message -->
+        <div v-if="errorMessage" class="alert alert-error">
+          {{ errorMessage }}
+        </div>
 
-      <form @submit.prevent="handleRegister" class="register-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <input
-              id="firstName"
-              v-model="form.firstName"
-              type="text"
-              :class="{ 'input-error': errors.firstName }"
-              placeholder="John"
-            />
-            <span v-if="errors.firstName" class="error-text">{{ errors.firstName }}</span>
+        <form @submit.prevent="handleRegister" class="register-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input
+                id="firstName"
+                v-model="form.firstName"
+                type="text"
+                :class="{ 'input-error': errors.firstName }"
+                placeholder="John"
+              />
+              <span v-if="errors.firstName" class="error-text">{{ errors.firstName }}</span>
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name</label>
+              <input
+                id="lastName"
+                v-model="form.lastName"
+                type="text"
+                :class="{ 'input-error': errors.lastName }"
+                placeholder="Doe"
+              />
+              <span v-if="errors.lastName" class="error-text">{{ errors.lastName }}</span>
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="lastName">Last Name</label>
+            <label for="email">Email Address</label>
             <input
-              id="lastName"
-              v-model="form.lastName"
-              type="text"
-              :class="{ 'input-error': errors.lastName }"
-              placeholder="Doe"
+              id="email"
+              v-model="form.email"
+              type="email"
+              :class="{ 'input-error': errors.email }"
+              placeholder="john.doe@example.com"
             />
-            <span v-if="errors.lastName" class="error-text">{{ errors.lastName }}</span>
+            <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input
-            id="email"
-            v-model="form.email"
-            type="email"
-            :class="{ 'input-error': errors.email }"
-            placeholder="john.doe@example.com"
-          />
-          <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
-        </div>
-
-        <div class="form-group password-group">
-          <label for="password">Password</label>
-          <div class="password-input-container">
-            <input
-              id="password"
-              v-model="form.password"
-              :type="isPasswordVisible ? 'text' : 'password'"
-              :class="{ 'input-error': errors.password }"
-              placeholder="At least 8 characters"
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              @click="isPasswordVisible = !isPasswordVisible"
-            >
-              {{ isPasswordVisible ? '🙈' : '👁️' }}
-            </button>
+          <div class="form-group password-group">
+            <label for="password">Password</label>
+            <div class="password-input-container">
+              <input
+                id="password"
+                v-model="form.password"
+                :type="isPasswordVisible ? 'text' : 'password'"
+                :class="{ 'input-error': errors.password }"
+                placeholder="At least 8 characters"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="isPasswordVisible = !isPasswordVisible"
+              >
+                <i :class="isPasswordVisible ? 'mdi mdi-eye-off' : 'mdi mdi-eye'"></i>
+              </button>
+            </div>
+            <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
           </div>
-          <span v-if="errors.password" class="error-text">{{ errors.password }}</span>
-        </div>
 
-        <div class="form-group password-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <div class="password-input-container">
-            <input
-              id="confirmPassword"
-              v-model="form.confirmPassword"
-              :type="isConfirmPasswordVisible ? 'text' : 'password'"
-              :class="{ 'input-error': errors.confirmPassword }"
-              placeholder="Confirm your password"
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
-            >
-              {{ isConfirmPasswordVisible ? '🙈' : '👁️' }}
-            </button>
+          <div class="form-group password-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <div class="password-input-container">
+              <input
+                id="confirmPassword"
+                v-model="form.confirmPassword"
+                :type="isConfirmPasswordVisible ? 'text' : 'password'"
+                :class="{ 'input-error': errors.confirmPassword }"
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                @click="isConfirmPasswordVisible = !isConfirmPasswordVisible"
+              >
+                <i :class="isConfirmPasswordVisible ? 'mdi mdi-eye-off' : 'mdi mdi-eye'"></i>
+              </button>
+            </div>
+            <span v-if="errors.confirmPassword" class="error-text">{{
+              errors.confirmPassword
+            }}</span>
           </div>
-          <span v-if="errors.confirmPassword" class="error-text">{{ errors.confirmPassword }}</span>
-        </div>
 
-        <button type="submit" class="register-button" :disabled="isLoading">
-          <span v-if="isLoading" class="loader"></span>
-          <span v-else>Create Account</span>
-        </button>
+          <button type="submit" class="register-button" :disabled="isLoading">
+            <span v-if="isLoading" class="loader"></span>
+            <span v-else>Create Account</span>
+          </button>
 
-        <div class="login-link">Already have an account? <a href="/login2">Log in</a></div>
-      </form>
+          <div class="login-link">Already have an account? <a href="/login2">Log in</a></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right: Register Now Heading -->
+    <div class="register-right">
+      <h1>YOUR VOICE MATTERS.</h1>
     </div>
   </div>
 </template>
 
 <style scoped>
+i {
+  font-size: 20px; /* Adjust size of the icon */
+  color: black; /* Adjust color */
+  cursor: pointer; /* Make it clickable */
+}
+
 .register-container {
+  display: flex;
+  justify-content: space-between; /* Distributes space between the left and right */
+  align-items: center;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  padding: 0;
+  background-image: url('@/assets/birdview.jpg');
+}
+
+.register-content {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-
-  background-image: url('@/assets/Login2Background.jpg');
+  width: 50%; /* Adjust the width to control how much space the form occupies */
 }
 
 .register-card {
@@ -269,6 +295,20 @@ const handleRegister = async () => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   padding: 32px;
   opacity: 0.9;
+}
+
+.register-right {
+  width: 50%; /* This occupies the other half of the screen */
+  display: flex;
+  padding-left: 0;
+  margin-left: 0;
+  align-items: center;
+}
+
+.register-right h1 {
+  font-size: 150px;
+  font-weight: bold;
+  color: #fefefe;
 }
 
 .register-header {
@@ -363,10 +403,10 @@ input:focus {
 }
 
 .register-button {
-  background-color: #4f46e5;
+  background-color: #0d47a1;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   padding: 14px;
   font-size: 16px;
   font-weight: 600;
@@ -379,7 +419,7 @@ input:focus {
 }
 
 .register-button:hover {
-  background-color: #4338ca;
+  background-color: #102e50;
 }
 
 .register-button:disabled {
@@ -439,5 +479,65 @@ input:focus {
 
 .mt-2 {
   margin-top: 8px;
+}
+@media (max-width: 1024px) {
+  .register-container {
+    flex-direction: column;
+    padding: 20px;
+    gap: 32px;
+  }
+
+  .register-content,
+  .register-right {
+    width: 100%;
+  }
+
+  .register-right {
+    order: -1; /* Move "Register Now" heading above form on mobile */
+    text-align: center;
+  }
+
+  .register-right h1 {
+    font-size: 36px;
+  }
+
+  .register-card {
+    margin: 0 auto;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .register-card {
+    padding: 20px;
+  }
+
+  .register-right h1 {
+    font-size: 28px;
+  }
+
+  .register-header h1 {
+    font-size: 20px;
+  }
+
+  .register-header p {
+    font-size: 14px;
+  }
+
+  .register-button {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .login-link {
+    font-size: 13px;
+  }
 }
 </style>

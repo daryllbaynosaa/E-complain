@@ -1,23 +1,7 @@
 <template>
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
-  <br />
+  <div class="container-fluid">
+    <img src="@/assets/republic.png" alt="My App Logo" class="logo-img" />
+  </div>
 
   <!-- Title Text -->
   <div class="text-center main-title mb-6">
@@ -49,11 +33,18 @@
 
 <style>
 /* Global styles */
+
+.logo-img {
+  width: 200px;
+  height: auto;
+  margin-left: 200px;
+  margin-top: 100px;
+}
 body {
   margin: 0;
   padding: 0;
   height: 100vh; /* Ensure the full height of the page */
-  background-image: url('@/assets/Login2Background.jpg');
+  background-image: url('@/assets/birdview.jpg');
   background-size: cover;
   background-position: center;
 }

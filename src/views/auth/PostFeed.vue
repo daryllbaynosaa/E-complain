@@ -40,7 +40,7 @@
                 Trending
               </a>
               <a
-                href="#"
+                href="profile"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
                 My Profile
@@ -50,6 +50,7 @@
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <button
+                v-if="user"
                 @click="showNewPostForm = true"
                 class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
@@ -69,20 +70,57 @@
                 </svg>
                 <span>New Post</span>
               </button>
+              <button
+                v-else
+                @click="signIn"
+                class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <span>Sign In</span>
+              </button>
             </div>
             <div class="hidden md:ml-4 md:flex-shrink-0 md:flex md:items-center">
-              <div class="ml-3 relative">
+              <div v-if="user" class="ml-3 relative">
                 <div>
                   <button
                     class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    @click="toggleUserMenu"
                   >
                     <span class="sr-only">Open user menu</span>
                     <div
+                      v-if="currentUserProfile && currentUserProfile.avatar_url"
+                      class="h-8 w-8 rounded-full overflow-hidden"
+                    >
+                      <img
+                        :src="currentUserProfile.avatar_url"
+                        alt="User avatar"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div
+                      v-else
                       class="h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-semibold"
                     >
-                      {{ currentUser.name.charAt(0) }}
+                      {{ getUserInitials() }}
                     </div>
                   </button>
+                </div>
+                <div
+                  v-if="showUserMenu"
+                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                >
+                  <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >Your Profile</a
+                  >
+
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >Settings</a
+                  >
+                  <a
+                    href="#"
+                    @click.prevent="signOut"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >Sign out</a
+                  >
                 </div>
               </div>
             </div>
@@ -93,7 +131,12 @@
 
     <div class="py-6">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Loading state -->
+        <div v-if="loading" class="flex justify-center items-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+
+        <div v-else class="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <!-- Sidebar -->
           <div class="lg:col-span-1">
             <div class="bg-white shadow rounded-lg p-4 sticky top-20">
@@ -252,10 +295,10 @@
                               @change="handleImageUpload"
                               class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                             />
-                            <div v-if="newPost.imageUrl" class="mt-2">
+                            <div v-if="newPost.imageFile" class="mt-2">
                               <p class="text-sm text-gray-500 mb-1">Preview:</p>
                               <img
-                                :src="newPost.imageUrl"
+                                :src="imagePreview"
                                 alt="Preview"
                                 class="h-32 object-cover rounded-md"
                               />
@@ -269,8 +312,31 @@
                     <button
                       type="button"
                       @click="addPost"
+                      :disabled="isSubmitting"
                       class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                     >
+                      <span v-if="isSubmitting" class="mr-2">
+                        <svg
+                          class="animate-spin h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </span>
                       Post
                     </button>
                     <button
@@ -314,19 +380,32 @@
                 <div class="px-4 py-5 sm:px-6">
                   <div class="flex items-center">
                     <div
+                      v-if="getPostProfile(selectedPost)?.avatar_url"
+                      class="h-10 w-10 rounded-full overflow-hidden"
+                    >
+                      <img
+                        :src="getPostProfile(selectedPost).avatar_url"
+                        alt="User avatar"
+                        class="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div
+                      v-else
                       class="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-semibold"
                     >
-                      {{ selectedPost.author.charAt(0) }}
+                      {{ getPostAuthorInitial(selectedPost) }}
                     </div>
                     <div class="ml-3">
-                      <p class="text-sm font-medium text-gray-900">{{ selectedPost.author }}</p>
-                      <p class="text-sm text-gray-500">{{ formatDate(selectedPost.date) }}</p>
+                      <p class="text-sm font-medium text-gray-900">
+                        {{ getPostAuthorName(selectedPost) }}
+                      </p>
+                      <p class="text-sm text-gray-500">{{ formatDate(selectedPost.created_at) }}</p>
                     </div>
                     <div class="ml-auto">
                       <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
                       >
-                        {{ getCategoryName(selectedPost.categoryId) }}
+                        {{ getCategoryName(selectedPost.category_id) }}
                       </span>
                     </div>
                   </div>
@@ -334,9 +413,9 @@
                   <p class="mt-2 text-gray-700 whitespace-pre-line">
                     {{ selectedPost.description }}
                   </p>
-                  <div v-if="selectedPost.imageUrl" class="mt-4">
+                  <div v-if="selectedPost.image_url" class="mt-4">
                     <img
-                      :src="selectedPost.imageUrl"
+                      :src="selectedPost.image_url"
                       alt="Post image"
                       class="max-h-96 object-contain rounded-md"
                     />
@@ -365,19 +444,21 @@
                           d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
                         />
                       </svg>
-                      {{ selectedPost.likes.length }}
-                      {{ selectedPost.likes.length === 1 ? 'Raise' : 'Raises' }}
+                      {{ postLikes[selectedPost.id]?.length || 0 }}
+                      {{ (postLikes[selectedPost.id]?.length || 0) === 1 ? 'Raise' : 'Raises' }}
                     </button>
                     <span class="text-sm text-gray-500">
-                      {{ selectedPost.comments.length }}
-                      {{ selectedPost.comments.length === 1 ? 'Comment' : 'Comments' }}
+                      {{ postComments[selectedPost.id]?.length || 0 }}
+                      {{
+                        (postComments[selectedPost.id]?.length || 0) === 1 ? 'Comment' : 'Comments'
+                      }}
                     </span>
                   </div>
                 </div>
               </div>
 
               <!-- Comment Form -->
-              <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+              <div v-if="user" class="border-t border-gray-200 px-4 py-5 sm:px-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Add a Comment</h3>
                 <form @submit.prevent="addComment" class="space-y-4">
                   <div>
@@ -393,12 +474,42 @@
                   <div class="flex justify-end">
                     <button
                       type="submit"
+                      :disabled="isSubmittingComment"
                       class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
+                      <span v-if="isSubmittingComment" class="mr-2">
+                        <svg
+                          class="animate-spin h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </span>
                       Post Comment
                     </button>
                   </div>
                 </form>
+              </div>
+              <div v-else class="border-t border-gray-200 px-4 py-5 sm:px-6 text-center">
+                <p class="text-gray-500">
+                  Please
+                  <button @click="signIn" class="text-blue-600 font-medium">sign in</button> to
+                  comment
+                </p>
               </div>
 
               <!-- Comments List -->
@@ -408,34 +519,51 @@
                   <span
                     class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
                   >
-                    {{ selectedPost.comments.length }}
-                    {{ selectedPost.comments.length === 1 ? 'Comment' : 'Comments' }}
+                    {{ postComments[selectedPost.id]?.length || 0 }}
+                    {{
+                      (postComments[selectedPost.id]?.length || 0) === 1 ? 'Comment' : 'Comments'
+                    }}
                   </span>
                 </div>
                 <div class="border-t border-gray-200">
                   <div
-                    v-if="selectedPost.comments.length === 0"
+                    v-if="
+                      !postComments[selectedPost.id] || postComments[selectedPost.id].length === 0
+                    "
                     class="p-6 text-center text-gray-500"
                   >
                     No comments yet. Be the first to comment!
                   </div>
                   <ul v-else class="divide-y divide-gray-200">
                     <li
-                      v-for="comment in selectedPost.comments"
+                      v-for="comment in postComments[selectedPost.id]"
                       :key="comment.id"
                       class="px-4 py-5 sm:px-6"
                     >
                       <div class="flex items-start">
                         <div
+                          v-if="getCommentProfile(comment)?.avatar_url"
+                          class="h-8 w-8 rounded-full overflow-hidden"
+                        >
+                          <img
+                            :src="getCommentProfile(comment).avatar_url"
+                            alt="User avatar"
+                            class="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div
+                          v-else
                           class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold"
                         >
-                          {{ comment.author.charAt(0) }}
+                          {{ getCommentAuthorInitial(comment) }}
                         </div>
                         <div class="ml-3 flex-1">
                           <div class="flex justify-between">
-                            <span class="font-medium text-gray-900">{{ comment.author }}</span>
+                            <span class="font-medium text-gray-900">{{
+                              getCommentAuthorName(comment)
+                            }}</span>
                             <span class="text-sm text-gray-500">{{
-                              formatDate(comment.date)
+                              formatDate(comment.created_at)
                             }}</span>
                           </div>
                           <p class="mt-1 text-gray-700">{{ comment.text }}</p>
@@ -451,7 +579,7 @@
             <div v-else>
               <!-- Trending Posts -->
               <div
-                v-if="sortBy === 'trending' && filteredPosts.length > 0"
+                v-if="sortBy === 'trending' && trendingPosts.length > 0"
                 class="bg-white shadow sm:rounded-lg overflow-hidden mb-6"
               >
                 <div class="px-4 py-5 sm:px-6">
@@ -475,26 +603,40 @@
                 </div>
                 <div class="border-t border-gray-200">
                   <div
+                    v-if="trendingPosts.length > 0"
                     class="px-4 py-5 sm:px-6 hover:bg-gray-50 cursor-pointer"
                     @click="selectPost(trendingPosts[0])"
                   >
                     <div class="flex items-center">
                       <div
+                        v-if="getPostProfile(trendingPosts[0])?.avatar_url"
+                        class="h-10 w-10 rounded-full overflow-hidden"
+                      >
+                        <img
+                          :src="getPostProfile(trendingPosts[0]).avatar_url"
+                          alt="User avatar"
+                          class="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div
+                        v-else
                         class="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-semibold"
                       >
-                        {{ trendingPosts[0].author.charAt(0) }}
+                        {{ getPostAuthorInitial(trendingPosts[0]) }}
                       </div>
                       <div class="ml-3">
                         <p class="text-sm font-medium text-gray-900">
-                          {{ trendingPosts[0].author }}
+                          {{ getPostAuthorName(trendingPosts[0]) }}
                         </p>
-                        <p class="text-sm text-gray-500">{{ formatDate(trendingPosts[0].date) }}</p>
+                        <p class="text-sm text-gray-500">
+                          {{ formatDate(trendingPosts[0].created_at) }}
+                        </p>
                       </div>
                       <div class="ml-auto">
                         <span
                           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
                         >
-                          {{ getCategoryName(trendingPosts[0].categoryId) }}
+                          {{ getCategoryName(trendingPosts[0].category_id) }}
                         </span>
                       </div>
                     </div>
@@ -504,9 +646,9 @@
                     <p class="mt-1 text-sm text-gray-600 line-clamp-2">
                       {{ trendingPosts[0].description }}
                     </p>
-                    <div v-if="trendingPosts[0].imageUrl" class="mt-2">
+                    <div v-if="trendingPosts[0].image_url" class="mt-2">
                       <img
-                        :src="trendingPosts[0].imageUrl"
+                        :src="trendingPosts[0].image_url"
                         alt="Post image"
                         class="h-48 w-full object-cover rounded-md"
                       />
@@ -535,8 +677,10 @@
                             d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
                           />
                         </svg>
-                        {{ trendingPosts[0].likes.length }}
-                        {{ trendingPosts[0].likes.length === 1 ? 'Raise' : 'Raises' }}
+                        {{ postLikes[trendingPosts[0].id]?.length || 0 }}
+                        {{
+                          (postLikes[trendingPosts[0].id]?.length || 0) === 1 ? 'Raise' : 'Raises'
+                        }}
                       </button>
                       <span class="text-sm text-gray-500 flex items-center">
                         <svg
@@ -553,8 +697,12 @@
                             d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                           />
                         </svg>
-                        {{ trendingPosts[0].comments.length }}
-                        {{ trendingPosts[0].comments.length === 1 ? 'Comment' : 'Comments' }}
+                        {{ postComments[trendingPosts[0].id]?.length || 0 }}
+                        {{
+                          (postComments[trendingPosts[0].id]?.length || 0) === 1
+                            ? 'Comment'
+                            : 'Comments'
+                        }}
                       </span>
                     </div>
                   </div>
@@ -589,27 +737,40 @@
                   >
                     <div class="flex items-center">
                       <div
+                        v-if="getPostProfile(post)?.avatar_url"
+                        class="h-10 w-10 rounded-full overflow-hidden"
+                      >
+                        <img
+                          :src="getPostProfile(post).avatar_url"
+                          alt="User avatar"
+                          class="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div
+                        v-else
                         class="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-600 font-semibold"
                       >
-                        {{ post.author.charAt(0) }}
+                        {{ getPostAuthorInitial(post) }}
                       </div>
                       <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{{ post.author }}</p>
-                        <p class="text-sm text-gray-500">{{ formatDate(post.date) }}</p>
+                        <p class="text-sm font-medium text-gray-900">
+                          {{ getPostAuthorName(post) }}
+                        </p>
+                        <p class="text-sm text-gray-500">{{ formatDate(post.created_at) }}</p>
                       </div>
                       <div class="ml-auto">
                         <span
                           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"
                         >
-                          {{ getCategoryName(post.categoryId) }}
+                          {{ getCategoryName(post.category_id) }}
                         </span>
                       </div>
                     </div>
                     <h3 class="mt-4 text-lg font-medium text-gray-900">{{ post.title }}</h3>
                     <p class="mt-1 text-sm text-gray-600 line-clamp-2">{{ post.description }}</p>
-                    <div v-if="post.imageUrl" class="mt-2">
+                    <div v-if="post.image_url" class="mt-2">
                       <img
-                        :src="post.imageUrl"
+                        :src="post.image_url"
                         alt="Post image"
                         class="h-48 w-full object-cover rounded-md"
                       />
@@ -638,7 +799,8 @@
                             d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"
                           />
                         </svg>
-                        {{ post.likes.length }} {{ post.likes.length === 1 ? 'Raise' : 'Raises' }}
+                        {{ postLikes[post.id]?.length || 0 }}
+                        {{ (postLikes[post.id]?.length || 0) === 1 ? 'Raise' : 'Raises' }}
                       </button>
                       <span class="text-sm text-gray-500 flex items-center">
                         <svg
@@ -648,8 +810,6 @@
                           viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
-                          class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor">
                           <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -657,8 +817,8 @@
                             d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                           />
                         </svg>
-                        {{ post.comments.length }}
-                        {{ post.comments.length === 1 ? 'Comment' : 'Comments' }}
+                        {{ postComments[post.id]?.length || 0 }}
+                        {{ (postComments[post.id]?.length || 0) === 1 ? 'Comment' : 'Comments' }}
                       </span>
                     </div>
                   </div>
@@ -673,13 +833,34 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { createClient } from '@supabase/supabase-js'
 
-// Current user (simplified for demo)
-const currentUser = reactive({
-  id: 'user1',
-  name: 'Alex Johnson',
-})
+// Initialize Supabase client
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// User state
+const user = ref(null)
+const showUserMenu = ref(false)
+const currentUserProfile = ref(null)
+
+// UI state
+const loading = ref(true)
+const selectedCategory = ref(null)
+const selectedPost = ref(null)
+const showNewPostForm = ref(false)
+const sortBy = ref('newest')
+const isSubmitting = ref(false)
+const isSubmittingComment = ref(false)
+const imagePreview = ref(null)
+
+// Data state
+const posts = ref([])
+const postLikes = ref({})
+const postComments = ref({})
+const userProfiles = ref({}) // Store user profiles by ID
 
 // Categories
 const categories = [
@@ -691,101 +872,11 @@ const categories = [
   { id: 6, name: 'Feature Requests' },
 ]
 
-// Sample data
-const posts = ref([
-  {
-    id: 1,
-    title: 'Di gumagana ilaw sa poste',
-    author: 'Jearah monggol',
-    description:
-      'di gumagana ilaw sa poste nato napaka dilikado maraming tumatambay na di taga dito sa lugar namin',
-    date: new Date('2025-04-15T10:30:00'),
-    imageUrl: '/src/assets/Poste.jpg',
-    categoryId: 1,
-    likes: ['user2', 'user3', 'user4'],
-    comments: [
-      {
-        id: 1,
-        author: 'Manny pacman',
-        text: 'sana maayus na ang dilim kasi jan napaka dilikado',
-        date: new Date('2025-04-15T14:22:00'),
-      },
-      {
-        id: 2,
-        author: 'Mohhammed Ali',
-        text: 'nakakatakot mag lakad jan sa gabi',
-        date: new Date('2025-04-16T09:15:00'),
-      },
-    ],
-  },
-  {
-    id: 2,
-    title: 'Puno na ang basura',
-    author: 'Danilo Bituro',
-    description:
-      'Di kinuha ang basura napuno na ang trash bin isang buwan nato dito paki actionan po',
-    date: new Date('2025-04-14T16:45:00'),
-    imageUrl: '/src/assets/garbage.jpg',
-    categoryId: 2,
-    likes: ['user1', 'user3'],
-    comments: [],
-  },
-  {
-    id: 3,
-    title: 'Suspicious people gathering',
-    author: 'jhon Lui',
-    description: '',
-    date: new Date('2025-04-13T09:20:00'),
-    imageUrl: '/src/assets/Security.jpg',
-    categoryId: 3,
-    likes: ['user2', 'user5', 'user6', 'user7', 'user8'],
-    comments: [
-      {
-        id: 1,
-        author: 'Maria leonora',
-        text: 'dami nila jan ang iinom pa ang ingay',
-        date: new Date('2025-04-13T10:15:00'),
-      },
-      {
-        id: 2,
-        author: 'John wick',
-        text: 'halos gabi2 jan sila',
-        date: new Date('2025-04-14T08:30:00'),
-      },
-    ],
-  },
-  {
-    id: 4,
-    title: 'Subrang ingay nakakadisturbo',
-    author: 'Jeaine Collado',
-    description: 'madaling araw na ang ingay pa din halos everyweek sila ganyan',
-    date: new Date('2025-04-12T14:10:00'),
-    imageUrl: '/src/assets/Party.jpg',
-    categoryId: 4,
-    likes: ['user1', 'user2', 'user3', 'user4'],
-    comments: [
-      {
-        id: 1,
-        author: 'Judas',
-        text: 'halos everyweek ganyan sila',
-        date: new Date('2025-04-12T15:45:00'),
-      },
-    ],
-  },
-])
-
-// UI state
-const selectedCategory = ref(null)
-const selectedPost = ref(null)
-const showNewPostForm = ref(false)
-const sortBy = ref('newest')
-
 // Form state
 const newPost = reactive({
   title: '',
-  author: currentUser.name,
   description: '',
-  imageUrl: null,
+  imageFile: null,
   categoryId: '',
 })
 
@@ -799,28 +890,35 @@ const filteredPosts = computed(() => {
 
   // Filter by category if selected
   if (selectedCategory.value) {
-    result = result.filter((post) => post.categoryId === selectedCategory.value)
+    result = result.filter((post) => post.category_id === selectedCategory.value)
   }
 
   // Sort posts
   if (sortBy.value === 'newest') {
-    result.sort((a, b) => new Date(b.date) - new Date(a.date))
+    result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
   } else if (sortBy.value === 'trending') {
-    result.sort((a, b) => b.likes.length - a.likes.length)
+    result.sort(
+      (a, b) => (postLikes.value[b.id]?.length || 0) - (postLikes.value[a.id]?.length || 0),
+    )
   } else if (sortBy.value === 'mostComments') {
-    result.sort((a, b) => b.comments.length - a.comments.length)
+    result.sort(
+      (a, b) => (postComments.value[b.id]?.length || 0) - (postComments.value[a.id]?.length || 0),
+    )
   }
 
   return result
 })
 
 const trendingPosts = computed(() => {
-  return [...posts.value].sort((a, b) => b.likes.length - a.likes.length)
+  return [...posts.value].sort(
+    (a, b) => (postLikes.value[b.id]?.length || 0) - (postLikes.value[a.id]?.length || 0),
+  )
 })
 
 // Methods
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-US', {
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -834,75 +932,571 @@ const getCategoryName = (categoryId) => {
   return category ? category.name : 'Uncategorized'
 }
 
+// Get profile for a post author
+const getPostProfile = (post) => {
+  if (!post || !post.user_id) return null
+  return userProfiles.value[post.user_id] || null
+}
+
+// Get profile for a comment author
+const getCommentProfile = (comment) => {
+  if (!comment || !comment.user_id) return null
+  return userProfiles.value[comment.user_id] || null
+}
+
+// New methods to handle user display
+const getPostAuthorName = (post) => {
+  // Check if post has user profile info
+  const profile = getPostProfile(post)
+  if (profile) {
+    return profile.username || profile.full_name || 'User'
+  }
+
+  // Fallback to post.author if available
+  if (post.author) {
+    return post.author
+  }
+
+  // Final fallback
+  return 'User'
+}
+
+const getPostAuthorInitial = (post) => {
+  const name = getPostAuthorName(post)
+  return name.charAt(0).toUpperCase()
+}
+
+const getCommentAuthorName = (comment) => {
+  // Check if comment has user profile info
+  const profile = getCommentProfile(comment)
+  if (profile) {
+    return profile.username || profile.full_name || 'User'
+  }
+
+  // Fallback to comment.author if available
+  if (comment.author) {
+    return comment.author
+  }
+
+  // Final fallback
+  return 'User'
+}
+
+const getCommentAuthorInitial = (comment) => {
+  const name = getCommentAuthorName(comment)
+  return name.charAt(0).toUpperCase()
+}
+
 const handleImageUpload = (event) => {
   const file = event.target.files[0]
   if (file && file.type.match('image.*')) {
+    newPost.imageFile = file
     const reader = new FileReader()
     reader.onload = (e) => {
-      newPost.imageUrl = e.target.result
+      imagePreview.value = e.target.result
     }
     reader.readAsDataURL(file)
   }
 }
 
-const addPost = () => {
-  const post = {
-    id: posts.value.length + 1,
-    title: newPost.title,
-    author: currentUser.name,
-    description: newPost.description,
-    imageUrl: newPost.imageUrl,
-    date: new Date(),
-    categoryId: parseInt(newPost.categoryId),
-    likes: [],
-    comments: [],
+// In your addPost function:
+const addPost = async () => {
+  if (!user.value) {
+    alert('Please sign in to post')
+    return
   }
 
-  posts.value.unshift(post)
+  if (!newPost.title || !newPost.description || !newPost.categoryId) {
+    alert('Please fill in all required fields')
+    return
+  }
 
-  // Reset form and close modal
-  newPost.title = ''
-  newPost.description = ''
-  newPost.imageUrl = null
-  newPost.categoryId = ''
-  showNewPostForm.value = false
+  isSubmitting.value = true
+
+  try {
+    let imageUrl = null
+
+    // Upload image if provided
+    if (newPost.imageFile) {
+      const fileExt = newPost.imageFile.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+      const filePath = `${user.value.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-images')
+        .upload(filePath, newPost.imageFile)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('post-images').getPublicUrl(filePath)
+
+      imageUrl = publicUrl
+    }
+
+    // Insert post
+    const { error } = await supabase.from('posts').insert({
+      title: newPost.title,
+      description: newPost.description,
+      image_url: imageUrl,
+      category_id: parseInt(newPost.categoryId),
+      user_id: user.value.id,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    // Reset form and close modal
+    newPost.title = ''
+    newPost.description = ''
+    newPost.imageFile = null
+    newPost.categoryId = ''
+    imagePreview.value = null
+    showNewPostForm.value = false
+
+    // Refresh posts
+    await fetchPosts()
+  } catch (error) {
+    console.error('Error adding post:', error)
+    alert('Failed to add post. Please try again.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
-const selectPost = (post) => {
+const selectPost = async (post) => {
   selectedPost.value = post
+
+  // Fetch comments for this post if not already loaded
+  if (!postComments.value[post.id]) {
+    await fetchComments(post.id)
+  }
 }
 
-const addComment = () => {
-  const comment = {
-    id: selectedPost.value.comments.length + 1,
-    author: currentUser.name,
-    text: newComment.text,
-    date: new Date(),
+const addComment = async () => {
+  if (!user.value) {
+    alert('Please sign in to comment')
+    return
   }
 
-  selectedPost.value.comments.push(comment)
+  if (!newComment.text) {
+    return
+  }
 
-  // Reset form
-  newComment.text = ''
+  isSubmittingComment.value = true
+
+  try {
+    const { data: comment, error } = await supabase
+      .from('comments')
+      .insert({
+        text: newComment.text,
+        post_id: selectedPost.value.id,
+        user_id: user.value.id,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    // Add comment to local state
+    if (!postComments.value[selectedPost.value.id]) {
+      postComments.value[selectedPost.value.id] = []
+    }
+    postComments.value[selectedPost.value.id].push(comment)
+
+    // Reset form
+    newComment.text = ''
+  } catch (error) {
+    console.error('Error adding comment:', error)
+    alert('Failed to add comment. Please try again.')
+  } finally {
+    isSubmittingComment.value = false
+  }
 }
 
-const toggleLike = (post) => {
-  const userIndex = post.likes.indexOf(currentUser.id)
-  if (userIndex === -1) {
-    // User hasn't liked the post yet, so add like
-    post.likes.push(currentUser.id)
-  } else {
-    // User already liked the post, so remove like
-    post.likes.splice(userIndex, 1)
+const toggleLike = async (post) => {
+  if (!user.value) {
+    alert('Please sign in to raise a concern')
+    return
+  }
+
+  try {
+    const isLiked = isLikedByCurrentUser(post)
+
+    if (isLiked) {
+      // Remove like
+      const { error } = await supabase
+        .from('likes')
+        .delete()
+        .eq('post_id', post.id)
+        .eq('user_id', user.value.id)
+
+      if (error) throw error
+
+      // Update local state
+      postLikes.value[post.id] = postLikes.value[post.id].filter(
+        (like) => like.user_id !== user.value.id,
+      )
+    } else {
+      // Add like
+      const { data, error } = await supabase
+        .from('likes')
+        .insert({
+          post_id: post.id,
+          user_id: user.value.id,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state
+      if (!postLikes.value[post.id]) {
+        postLikes.value[post.id] = []
+      }
+      postLikes.value[post.id].push(data)
+    }
+  } catch (error) {
+    console.error('Error toggling like:', error)
+    alert('Failed to update. Please try again.')
   }
 }
 
 const isLikedByCurrentUser = (post) => {
-  return post.likes.includes(currentUser.id)
+  if (!user.value || !postLikes.value[post.id]) return false
+  return postLikes.value[post.id].some((like) => like.user_id === user.value.id)
 }
+
+// Fetch user profiles from the profiles table
+const fetchUserProfiles = async (userIds) => {
+  if (!userIds || userIds.length === 0) return
+
+  try {
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError)
+      return
+    }
+
+    // Store profiles in our local state
+    profilesData.forEach((profile) => {
+      userProfiles.value[profile.id] = profile
+    })
+  } catch (error) {
+    console.error('Error fetching user profiles:', error)
+  }
+}
+
+// Fetch current user's profile
+const fetchCurrentUserProfile = async () => {
+  if (!user.value) return
+
+  try {
+    // Make sure we're using the user ID as a string/UUID, not trying to convert it
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.value.id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching current user profile:', error)
+
+      if (error.code === '22P02') {
+        console.warn('Check if user_id column is the correct type (UUID).')
+      }
+
+      // Only attempt to create profile if it's a "no rows found" type of error
+      if (error.code === 'PGRST116') {
+        await createUserProfile()
+      }
+
+      return
+    }
+
+    currentUserProfile.value = data
+    userProfiles.value[user.value.id] = data
+  } catch (error) {
+    console.error('Error fetching current user profile:', error)
+  }
+}
+
+// Add this new function to create a user profile if it doesn't exist
+const createUserProfile = async () => {
+  if (!user.value) return
+
+  try {
+    // Extract user metadata
+    const metadata = user.value.user_metadata || {}
+    const email = user.value.email || ''
+
+    // Create a new profile
+    const { error } = await supabase.from('profiles').insert({
+      id: user.value.id,
+      username: metadata.name || metadata.full_name || email.split('@')[0],
+      full_name: metadata.full_name || metadata.name || '',
+      avatar_url: metadata.avatar_url || '',
+    })
+
+    if (error) {
+      console.error('Error creating user profile:', error)
+      return
+    }
+
+    // Fetch the newly created profile
+    await fetchCurrentUserProfile()
+  } catch (error) {
+    console.error('Error creating user profile:', error)
+  }
+}
+
+const fetchPosts = async () => {
+  try {
+    loading.value = true
+
+    // Fetch posts
+    const { data: postsData, error: postsError } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (postsError) throw postsError
+
+    posts.value = postsData
+
+    // Extract all user IDs from posts
+    const userIds = [...new Set(postsData.map((post) => post.user_id))]
+
+    // Fetch user profiles
+    await fetchUserProfiles(userIds)
+
+    // Fetch likes for all posts
+    await fetchAllLikes()
+
+    // Fetch comments count for all posts
+    await fetchAllCommentCounts()
+  } catch (error) {
+    console.error('Error fetching posts:', error)
+    alert('Failed to load posts. Please refresh the page.')
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchAllLikes = async () => {
+  try {
+    const { data: likesData, error: likesError } = await supabase.from('likes').select('*')
+
+    if (likesError) throw likesError
+
+    // Group likes by post_id
+    const likesByPost = {}
+    likesData.forEach((like) => {
+      if (!likesByPost[like.post_id]) {
+        likesByPost[like.post_id] = []
+      }
+      likesByPost[like.post_id].push(like)
+    })
+
+    postLikes.value = likesByPost
+  } catch (error) {
+    console.error('Error fetching likes:', error)
+  }
+}
+
+const fetchAllCommentCounts = async () => {
+  try {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('comments')
+      .select('post_id')
+
+    if (commentsError) throw commentsError
+
+    // Group comments by post_id and count
+    const commentsByPost = {}
+    commentsData.forEach((comment) => {
+      if (!commentsByPost[comment.post_id]) {
+        commentsByPost[comment.post_id] = []
+      }
+      commentsByPost[comment.post_id].push(comment)
+    })
+
+    postComments.value = commentsByPost
+  } catch (error) {
+    console.error('Error fetching comment counts:', error)
+  }
+}
+
+const fetchComments = async (postId) => {
+  try {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+
+    if (commentsError) throw commentsError
+
+    // Extract user IDs from comments
+    const userIds = [...new Set(commentsData.map((comment) => comment.user_id))]
+
+    // Fetch user profiles for comment authors
+    await fetchUserProfiles(userIds)
+
+    postComments.value[postId] = commentsData
+  } catch (error) {
+    console.error(`Error fetching comments for post ${postId}:`, error)
+  }
+}
+
+const getUserInitials = () => {
+  if (currentUserProfile.value) {
+    const name = currentUserProfile.value.username || currentUserProfile.value.full_name || ''
+    return name.charAt(0).toUpperCase()
+  }
+
+  if (!user.value) return 'U'
+
+  const username =
+    user.value.user_metadata?.name || user.value.user_metadata?.full_name || user.value.email || ''
+  return username.charAt(0).toUpperCase()
+}
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+}
+
+// In your signIn function:
+const signIn = async () => {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    })
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Error signing in:', error)
+    alert('Failed to sign in. Please try again.')
+  }
+}
+
+const signOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    user.value = null
+    currentUserProfile.value = null
+  } catch (error) {
+    console.error('Error signing out:', error)
+    alert('Failed to sign out. Please try again.')
+  }
+}
+
+// Setup function - Fixed the onUnmounted issue by removing it from here
+const setupRealtimeSubscriptions = () => {
+  // Set up realtime subscription for posts
+  const postsSubscription = supabase
+    .channel('public:posts')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+      fetchPosts()
+    })
+    .subscribe()
+
+  // Set up realtime subscription for likes
+  const likesSubscription = supabase
+    .channel('public:likes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' }, () => {
+      fetchAllLikes()
+    })
+    .subscribe()
+
+  // Set up realtime subscription for comments
+  const commentsSubscription = supabase
+    .channel('public:comments')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
+      if (selectedPost.value) {
+        fetchComments(selectedPost.value.id)
+      }
+      fetchAllCommentCounts()
+    })
+    .subscribe()
+
+  // Set up realtime subscription for profiles
+  const profilesSubscription = supabase
+    .channel('public:profiles')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+      if (user.value) {
+        fetchCurrentUserProfile()
+      }
+    })
+    .subscribe()
+
+  // Return cleanup function
+  return () => {
+    postsSubscription.unsubscribe()
+    likesSubscription.unsubscribe()
+    commentsSubscription.unsubscribe()
+    profilesSubscription.unsubscribe()
+  }
+}
+
+// In your onMounted function:
+onMounted(async () => {
+  // Check for existing session
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  user.value = session?.user || null
+
+  // Set up auth state change listener
+  supabase.auth.onAuthStateChange((event, session) => {
+    user.value = session?.user || null
+    if (user.value) {
+      fetchCurrentUserProfile()
+    } else {
+      currentUserProfile.value = null
+    }
+  })
+
+  // Fetch current user profile if logged in
+  if (user.value) {
+    await fetchCurrentUserProfile()
+  }
+
+  // Set up realtime subscriptions
+  const cleanup = setupRealtimeSubscriptions()
+
+  // Register cleanup function properly
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', cleanup)
+  }
+
+  // Fetch initial data
+  await fetchPosts()
+})
 </script>
 
 <style>
 /* Add any custom styles here */
 /* The component already uses Tailwind CSS classes for styling */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 </style>
