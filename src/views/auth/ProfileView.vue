@@ -284,7 +284,6 @@ function discardChanges() {
                 class="nav-link"
                 >Home</a
               >
-              <a href="#" class="nav-link">Trending</a>
               <a href="profile" class="nav-link active">My Profile</a>
             </nav>
           </div>
