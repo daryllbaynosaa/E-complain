@@ -171,7 +171,7 @@ const handleRegister = async () => {
                 v-model="form.firstName"
                 type="text"
                 :class="{ 'input-error': errors.firstName }"
-                placeholder="John"
+                placeholder="First Name"
               />
               <span v-if="errors.firstName" class="error-text">{{ errors.firstName }}</span>
             </div>
@@ -183,7 +183,7 @@ const handleRegister = async () => {
                 v-model="form.lastName"
                 type="text"
                 :class="{ 'input-error': errors.lastName }"
-                placeholder="Doe"
+                placeholder="Last Name"
               />
               <span v-if="errors.lastName" class="error-text">{{ errors.lastName }}</span>
             </div>
@@ -196,7 +196,7 @@ const handleRegister = async () => {
               v-model="form.email"
               type="email"
               :class="{ 'input-error': errors.email }"
-              placeholder="john.doe@example.com"
+              placeholder="sample@gmail.com"
             />
             <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
           </div>
