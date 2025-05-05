@@ -3,7 +3,7 @@ import LoginView from '../views/auth/LoginView.vue'
 import SignView from '../views/auth/SignView.vue'
 import LoginPage2 from '../views/auth/LoginPage2.vue'
 import PostFeed from '../views/auth/PostFeed.vue'
-import ProfileView from '../views/auth/Profileview.vue'
+import ProfileView from '../views/auth/ProfileView.vue'
 const routes = [
   { path: '/', redirect: '/login' },
   { path: '/login', name: 'Login', component: LoginView },
