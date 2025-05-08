@@ -7,7 +7,7 @@
 
     <!-- Title Text -->
     <div class="text-center main-title mb-6">
-      <h1 class="text-h4 text-lg-h1">BARANGAY COMPLAINTS AND REPORT SYSTEM</h1>
+      <h1 class="text-h4 text-lg-h1">BARANGAY COMPLAINS AND REPORT SYSTEM</h1>
     </div>
     <br />
     <br />
