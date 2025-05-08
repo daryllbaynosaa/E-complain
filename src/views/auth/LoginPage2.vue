@@ -16,17 +16,21 @@
       </div>
     </div>
 
-    <!-- Error alert -->
-    <v-alert
-      v-if="loginStatus.error"
-      type="error"
-      variant="tonal"
-      class="mx-auto mb-4 alert-container"
-      closable
-      @click:close="loginStatus.error = ''"
-    >
-      {{ loginStatus.error }}
-    </v-alert>
+    <!-- Error alert - Modified to be smaller and not transparent -->
+    <div v-if="loginStatus.error" class="error-alert">
+      <div class="error-content">
+        <v-icon icon="mdi-alert-circle" color="white" class="mr-2"></v-icon>
+        {{ loginStatus.error }}
+        <v-btn
+          icon="mdi-close"
+          size="small"
+          variant="text"
+          color="white"
+          class="ml-auto"
+          @click="loginStatus.error = ''"
+        ></v-btn>
+      </div>
+    </div>
 
     <v-card
       class="mx-auto pa-6 pa-sm-8 pa-md-12 pb-6 pb-sm-8 semi-transparent-card"
@@ -206,7 +210,7 @@ const handleLogin = async () => {
 
       // Redirect to dashboard
       setTimeout(() => {
-        router.replace('/postfeed')
+        router.replace('postfeed')
       }, 1000)
     }
   } catch (err) {
@@ -248,8 +252,9 @@ const sendPasswordReset = async () => {
   }
 }
 
+// Use onMounted to ensure this runs only in the browser environment
 onMounted(() => {
-  // This will run when the component is mounted
+  // Your code that needs to run after the component is mounted
 })
 </script>
 
@@ -265,11 +270,6 @@ onMounted(() => {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-}
-
-.alert-container {
-  width: 100%;
-  max-width: 448px;
 }
 
 /* New success alert styling - smaller and solid (not transparent) */
@@ -291,7 +291,29 @@ onMounted(() => {
   padding: 8px 16px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  font-size: 20px;
+  font-size: 14px; /* Reduced font size */
+}
+
+/* New error alert styling - smaller and solid (not transparent) */
+.error-alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 300px;
+  width: auto;
+}
+
+.error-content {
+  display: flex;
+  align-items: center;
+  background-color: #f44336; /* Solid red background */
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 14px; /* Reduced font size */
 }
 
 /* Gradient with transparency */
@@ -348,8 +370,14 @@ onMounted(() => {
     padding: 0.5rem;
   }
 
-  .success-alert {
+  .success-alert,
+  .error-alert {
     max-width: 250px;
+  }
+
+  .success-content,
+  .error-content {
+    font-size: 13px;
   }
 }
 
@@ -358,8 +386,15 @@ onMounted(() => {
     padding: 1rem !important;
   }
 
-  .success-alert {
+  .success-alert,
+  .error-alert {
     max-width: 200px;
+  }
+
+  .success-content,
+  .error-content {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 
