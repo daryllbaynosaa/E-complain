@@ -2,7 +2,7 @@
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import { supabase } from '@/utils/supabase'
 // Vuetify
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'

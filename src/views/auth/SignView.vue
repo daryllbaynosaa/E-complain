@@ -171,7 +171,7 @@ const handleRegister = async () => {
                 v-model="form.firstName"
                 type="text"
                 :class="{ 'input-error': errors.firstName }"
-                placeholder="John"
+                placeholder="Daryll"
               />
               <span v-if="errors.firstName" class="error-text">{{ errors.firstName }}</span>
             </div>
@@ -183,7 +183,7 @@ const handleRegister = async () => {
                 v-model="form.lastName"
                 type="text"
                 :class="{ 'input-error': errors.lastName }"
-                placeholder="Doe"
+                placeholder="Hansam"
               />
               <span v-if="errors.lastName" class="error-text">{{ errors.lastName }}</span>
             </div>
@@ -196,7 +196,7 @@ const handleRegister = async () => {
               v-model="form.email"
               type="email"
               :class="{ 'input-error': errors.email }"
-              placeholder="john.doe@example.com"
+              placeholder="daryll@example.com"
             />
             <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
           </div>
@@ -264,27 +264,28 @@ const handleRegister = async () => {
 
 <style scoped>
 i {
-  font-size: 20px; /* Adjust size of the icon */
-  color: black; /* Adjust color */
-  cursor: pointer; /* Make it clickable */
+  font-size: 20px;
+  color: black;
+  cursor: pointer;
 }
 
 .register-container {
   display: flex;
-  justify-content: space-between; /* Distributes space between the left and right */
-  align-items: center;
   min-height: 100vh;
   background-size: cover;
   background-position: center;
   padding: 0;
   background-image: url('@/assets/birdview.jpg');
+  background-attachment: fixed;
+  overflow-x: hidden;
 }
 
 .register-content {
+  width: 45%;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
-  width: 50%; /* Adjust the width to control how much space the form occupies */
+  padding: 20px;
 }
 
 .register-card {
@@ -295,20 +296,23 @@ i {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   padding: 32px;
   opacity: 0.9;
+  margin-right: 0;
 }
 
 .register-right {
-  width: 50%; /* This occupies the other half of the screen */
+  width: 55%;
   display: flex;
-  padding-left: 0;
-  margin-left: 0;
   align-items: center;
+  padding-left: 40px;
 }
 
 .register-right h1 {
-  font-size: 150px;
+  font-size: 120px;
   font-weight: bold;
   color: #fefefe;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.6);
+  line-height: 1.1;
+  text-align: left;
 }
 
 .register-header {
@@ -337,12 +341,6 @@ i {
 .form-row {
   display: flex;
   gap: 16px;
-}
-
-@media (max-width: 600px) {
-  .form-row {
-    flex-direction: column;
-  }
 }
 
 .form-group {
@@ -480,42 +478,134 @@ input:focus {
 .mt-2 {
   margin-top: 8px;
 }
-@media (max-width: 1024px) {
+
+/* Extra large screens (1600px and above) */
+@media (min-width: 1600px) {
+  .register-right h1 {
+    font-size: 150px;
+  }
+
+  .register-card {
+    max-width: 550px;
+    padding: 40px;
+  }
+}
+
+/* Large screens (1200px to 1599px) */
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .register-right h1 {
+    font-size: 120px;
+  }
+}
+
+/* Medium-large screens (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .register-right h1 {
+    font-size: 90px;
+  }
+
+  .register-content {
+    width: 50%;
+  }
+
+  .register-right {
+    width: 50%;
+    padding-left: 30px;
+  }
+}
+
+/* Medium screens (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
   .register-container {
     flex-direction: column;
-    padding: 20px;
-    gap: 32px;
+    padding: 40px 20px;
   }
 
   .register-content,
   .register-right {
     width: 100%;
+    justify-content: center;
+    padding: 20px;
   }
 
   .register-right {
-    order: -1; /* Move "Register Now" heading above form on mobile */
+    order: -1; /* Move heading above form */
+  }
+
+  .register-right h1 {
+    font-size: 70px;
     text-align: center;
+  }
+
+  .register-card {
+    max-width: 600px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+/* Small screens (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .register-container {
+    flex-direction: column;
+    padding: 30px 20px;
+  }
+
+  .register-content,
+  .register-right {
+    width: 100%;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .register-right {
+    order: -1;
+  }
+
+  .register-right h1 {
+    font-size: 50px;
+    text-align: center;
+  }
+
+  .register-card {
+    padding: 24px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+/* Extra small screens (575px and below) */
+@media (max-width: 575px) {
+  .register-container {
+    flex-direction: column;
+    padding: 20px 15px;
+  }
+
+  .register-content,
+  .register-right {
+    width: 100%;
+    justify-content: center;
+    padding: 15px;
+  }
+
+  .register-right {
+    order: -1;
   }
 
   .register-right h1 {
     font-size: 36px;
+    text-align: center;
   }
 
   .register-card {
-    margin: 0 auto;
-    padding: 24px;
-    width: 90%;
-    max-width: 500px;
-  }
-}
-
-@media (max-width: 600px) {
-  .register-card {
-    padding: 20px;
-  }
-
-  .register-right h1 {
-    font-size: 28px;
+    padding: 20px 16px;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .register-header h1 {
@@ -526,18 +616,54 @@ input:focus {
     font-size: 14px;
   }
 
-  .register-button {
-    font-size: 14px;
-    padding: 12px;
-  }
-
   .form-row {
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
 
-  .login-link {
+  input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .register-button {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  label {
     font-size: 13px;
+  }
+
+  .error-text {
+    font-size: 11px;
+  }
+}
+
+/* Very small screens (375px and below) */
+@media (max-width: 375px) {
+  .register-right h1 {
+    font-size: 28px;
+  }
+
+  .register-card {
+    padding: 16px 12px;
+  }
+
+  .register-header h1 {
+    font-size: 18px;
+  }
+
+  .register-header p {
+    font-size: 12px;
+  }
+
+  .register-form {
+    gap: 14px;
+  }
+
+  input {
+    padding: 8px 12px;
   }
 }
 </style>

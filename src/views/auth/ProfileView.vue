@@ -12,8 +12,9 @@ import {
   AlertCircle,
   Link as LinkIcon,
   AtSign,
-  UserCircle,
   FileText,
+  Menu,
+  X,
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -28,6 +29,7 @@ const user = ref(null)
 const notification = ref({ show: false, type: '', message: '' })
 const formChanged = ref(false)
 const activeTab = ref('profile')
+const mobileMenuOpen = ref(false)
 
 // Form validation
 const errors = ref({})
@@ -54,6 +56,13 @@ const avatarColor = computed(() => {
 
 onMounted(() => {
   getUser()
+
+  // Add event listener to close mobile menu when window is resized to desktop size
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768 && mobileMenuOpen.value) {
+      mobileMenuOpen.value = false
+    }
+  })
 })
 
 // Track form changes
@@ -251,6 +260,10 @@ function discardChanges() {
   getProfile()
   formChanged.value = false
 }
+
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
 </script>
 
 <template>
@@ -275,18 +288,20 @@ function discardChanges() {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <span class="logo-text">E-Complain</span>
+              <span class="logo-text text-green">E-Complain</span>
             </div>
+
+            <!-- Desktop Navigation -->
             <nav class="main-nav">
-              <a
-                href="postfeed
-              "
-                class="nav-link"
-                >Home</a
-              >
-              <a href="#" class="nav-link">Trending</a>
+              <a href="postfeed" class="nav-link">Home</a>
               <a href="profile" class="nav-link active">My Profile</a>
             </nav>
+
+            <!-- Mobile Menu Button -->
+            <button @click="toggleMobileMenu" class="mobile-menu-toggle">
+              <Menu v-if="!mobileMenuOpen" class="menu-icon" />
+              <X v-else class="menu-icon" />
+            </button>
           </div>
 
           <div class="header-right">
@@ -302,14 +317,18 @@ function discardChanges() {
           </div>
         </div>
       </div>
-    </header>
 
-    <!-- Mobile menu button (for small screens) -->
-    <div class="mobile-menu-container">
-      <button class="mobile-menu-button">
-        <span class="mobile-menu-icon"></span>
-      </button>
-    </div>
+      <!-- Mobile Navigation Menu -->
+      <div v-if="mobileMenuOpen" class="mobile-nav">
+        <a href="postfeed" class="mobile-nav-link">Home</a>
+        <a href="profile" class="mobile-nav-link active">My Profile</a>
+        <div class="mobile-nav-divider"></div>
+        <button @click="signOut" class="mobile-nav-button">
+          <LogOut class="mobile-nav-icon" />
+          <span>Sign out</span>
+        </button>
+      </div>
+    </header>
 
     <!-- Notification -->
     <div
@@ -391,6 +410,7 @@ function discardChanges() {
                     </h1>
                     <p class="profile-email">{{ user?.email }}</p>
                   </div>
+
                   <button @click="signOut" class="sign-out-button">
                     <LogOut class="sign-out-icon" />
                     <span class="sign-out-text">Sign out</span>
@@ -445,6 +465,24 @@ function discardChanges() {
                   </div>
                   <p v-if="errors.username" class="input-error">{{ errors.username }}</p>
                   <p v-else class="input-help">This will be displayed publicly</p>
+                </div>
+
+                <div class="form-group">
+                  <label for="fullName" class="form-label">
+                    <User class="form-icon" />
+                    Full Name
+                  </label>
+                  <div class="input-wrapper">
+                    <input
+                      type="text"
+                      name="fullName"
+                      id="fullName"
+                      v-model="fullName"
+                      @input="trackChanges"
+                      class="form-input"
+                      placeholder="Your full name"
+                    />
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -633,12 +671,21 @@ function discardChanges() {
 .header-content {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   height: 4rem;
 }
 
 .header-left {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .header-left {
+    width: auto;
+  }
 }
 
 .logo {
@@ -695,9 +742,83 @@ function discardChanges() {
   font-weight: 600;
 }
 
-.header-right {
+.mobile-menu-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+@media (min-width: 768px) {
+  .mobile-menu-toggle {
+    display: none;
+  }
+}
+
+.menu-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #4b5563;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  padding: 0.5rem 1rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.mobile-nav-link {
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #4b5563;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-nav-link.active {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.mobile-nav-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+.mobile-nav-button {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.header-right {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .header-right {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .user-info {
@@ -707,15 +828,8 @@ function discardChanges() {
 }
 
 .user-email {
-  display: none;
   font-size: 0.875rem;
   color: #4b5563;
-}
-
-@media (min-width: 768px) {
-  .user-email {
-    display: block;
-  }
 }
 
 .avatar-small {
@@ -742,61 +856,6 @@ function discardChanges() {
   font-size: 0.875rem;
 }
 
-/* Mobile menu */
-.mobile-menu-container {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .mobile-menu-container {
-    display: block;
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    z-index: 20;
-  }
-
-  .mobile-menu-button {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 9999px;
-    background-color: #10b981;
-    box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-  }
-
-  .mobile-menu-icon {
-    position: relative;
-    width: 1.5rem;
-    height: 2px;
-    background-color: white;
-  }
-
-  .mobile-menu-icon::before,
-  .mobile-menu-icon::after {
-    content: '';
-    position: absolute;
-    width: 1.5rem;
-    height: 2px;
-    background-color: white;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu-icon::before {
-    transform: translateY(-6px);
-  }
-
-  .mobile-menu-icon::after {
-    transform: translateY(6px);
-  }
-}
-
 /* Notification styles */
 .notification {
   position: fixed;
@@ -809,6 +868,7 @@ function discardChanges() {
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   max-width: 24rem;
+  width: calc(100% - 2rem);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateY(0);
   opacity: 1;
@@ -828,6 +888,7 @@ function discardChanges() {
 
 .notification-content {
   display: flex;
+  align-items: flex-start;
 }
 
 .notification-icon {
@@ -848,6 +909,7 @@ function discardChanges() {
 
 .notification-message {
   margin-left: 0.75rem;
+  flex: 1;
 }
 
 .notification-message p {
@@ -856,9 +918,12 @@ function discardChanges() {
 }
 
 .notification-close {
-  margin-left: auto;
-  padding-left: 0.75rem;
+  margin-left: 0.75rem;
+  padding: 0.25rem;
   color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .notification-close:hover {
@@ -884,7 +949,13 @@ function discardChanges() {
 
 /* Main content styles */
 .main-content {
-  padding: 1.5rem 0;
+  padding: 1rem 0;
+}
+
+@media (min-width: 640px) {
+  .main-content {
+    padding: 1.5rem 0;
+  }
 }
 
 .content-container {
@@ -923,6 +994,7 @@ function discardChanges() {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.1),
     0 1px 2px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
 }
 
 /* Profile header styles */
@@ -931,28 +1003,33 @@ function discardChanges() {
 }
 
 .cover-image {
-  height: 8rem;
+  height: 6rem;
   background: linear-gradient(to right, #10b981, #0ea5e9);
+}
+
+@media (min-width: 640px) {
+  .cover-image {
+    height: 8rem;
+  }
 }
 
 /* New wrapper for profile header content to fix layout */
 .profile-header-wrapper {
   display: flex;
   flex-direction: column;
-  padding-bottom: 1rem;
+  padding: 0 1rem 1rem;
 }
 
 @media (min-width: 640px) {
   .profile-header-wrapper {
     flex-direction: row;
     align-items: flex-end;
-    padding-bottom: 0;
+    padding: 0 1.5rem 1.5rem;
   }
 }
 
 .avatar-container {
   margin-top: -3rem;
-  margin-left: 1rem;
   margin-bottom: 1rem;
 }
 
@@ -967,8 +1044,8 @@ function discardChanges() {
 }
 
 .avatar {
-  height: 6rem;
-  width: 6rem;
+  height: 5rem;
+  width: 5rem;
   border-radius: 9999px;
   overflow: hidden;
   background-color: #ffffff;
@@ -978,15 +1055,22 @@ function discardChanges() {
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+@media (min-width: 640px) {
+  .avatar {
+    height: 6rem;
+    width: 6rem;
+  }
+}
+
 .avatar-fallback-large {
-  height: 6rem;
-  width: 6rem;
+  height: 5rem;
+  width: 5rem;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   background-color: #ffffff;
   padding: 0.25rem;
   box-shadow:
@@ -994,12 +1078,20 @@ function discardChanges() {
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+@media (min-width: 640px) {
+  .avatar-fallback-large {
+    height: 6rem;
+    width: 6rem;
+    font-size: 1.5rem;
+  }
+}
+
 .avatar-upload-button {
   position: absolute;
   bottom: 0;
   right: 0;
-  height: 2rem;
-  width: 2rem;
+  height: 1.75rem;
+  width: 1.75rem;
   border-radius: 9999px;
   background-color: #ffffff;
   box-shadow:
@@ -1032,13 +1124,6 @@ function discardChanges() {
 
 .profile-header-info {
   flex: 1;
-  padding: 0 1rem 1rem;
-}
-
-@media (min-width: 640px) {
-  .profile-header-info {
-    padding: 0 1.5rem 1.5rem;
-  }
 }
 
 .profile-header-content {
@@ -1056,10 +1141,16 @@ function discardChanges() {
 }
 
 .profile-name {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 0.25rem;
+}
+
+@media (min-width: 640px) {
+  .profile-name {
+    font-size: 1.5rem;
+  }
 }
 
 .profile-email {
@@ -1110,17 +1201,35 @@ function discardChanges() {
 /* Tabs styles */
 .tabs-container {
   border-bottom: 1px solid #e5e7eb;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.tabs-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .tabs-wrapper {
-  padding: 0 1.5rem;
-  overflow-x: auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .tabs-wrapper {
+    padding: 0 1.5rem;
+  }
 }
 
 .tabs {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .tabs {
+    gap: 1.5rem;
+  }
 }
 
 .tab {
@@ -1133,6 +1242,7 @@ function discardChanges() {
   border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
   background: none;
+  cursor: pointer;
 }
 
 .tab:hover {
@@ -1170,7 +1280,13 @@ function discardChanges() {
 
 /* Tab content styles */
 .tab-content {
-  padding: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .tab-content {
+    padding: 1.5rem;
+  }
 }
 
 .profile-grid {
@@ -1297,6 +1413,7 @@ function discardChanges() {
   font-size: 0.875rem;
   font-weight: 500;
   color: #111827;
+  word-break: break-word;
 }
 
 /* Settings styles */
@@ -1308,6 +1425,12 @@ function discardChanges() {
 
 .settings-section {
   padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.settings-section:first-child {
+  padding-top: 0;
+  border-top: none;
 }
 
 .settings-title {
@@ -1349,6 +1472,7 @@ function discardChanges() {
 
 .option-content {
   margin-left: 0.75rem;
+  flex: 1;
 }
 
 .option-label {
@@ -1377,6 +1501,7 @@ function discardChanges() {
   color: #b91c1c;
   background-color: #ffffff;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .danger-button:hover {
@@ -1389,11 +1514,17 @@ function discardChanges() {
   justify-content: flex-end;
   gap: 0.75rem;
   background-color: #f9fafb;
-  padding: 1rem 1.5rem;
+  padding: 1rem;
   border-top: 1px solid #e5e7eb;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 640px) {
+  .form-actions {
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
   .form-actions {
     flex-direction: column-reverse;
     gap: 0.5rem;
@@ -1412,6 +1543,7 @@ function discardChanges() {
   color: #4b5563;
   background-color: #ffffff;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .discard-button:hover {
@@ -1431,6 +1563,7 @@ function discardChanges() {
   background-color: #10b981;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
 
 .save-button:hover {
@@ -1475,29 +1608,25 @@ textarea::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
-/* Responsive adjustments for small screens */
-@media (max-width: 480px) {
-  .cover-image {
-    height: 6rem;
+/* Additional responsive adjustments */
+@media (max-width: 360px) {
+  .profile-name {
+    font-size: 1.125rem;
   }
 
   .avatar {
-    height: 5rem;
-    width: 5rem;
+    height: 4.5rem;
+    width: 4.5rem;
   }
 
   .avatar-fallback-large {
-    height: 5rem;
-    width: 5rem;
-    font-size: 1.25rem;
+    height: 4.5rem;
+    width: 4.5rem;
+    font-size: 1.125rem;
   }
 
-  .profile-name {
-    font-size: 1.25rem;
-  }
-
-  .tab-content {
-    padding: 1rem;
+  .logo-text {
+    font-size: 1.125rem;
   }
 }
 </style>

@@ -1,35 +1,27 @@
 <template>
-  <div>
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-    <br />
-
-    <!-- Success alert -->
-    <v-alert
-      v-if="loginStatus.success"
-      type="success"
-      variant="tonal"
-      class="mx-auto mb-4"
-      max-width="448"
-      closable
-      @click:close="loginStatus.success = ''"
-    >
-      {{ loginStatus.success }}
-    </v-alert>
+  <div class="login-page-container">
+    <!-- Success alert - Modified to be smaller and not transparent -->
+    <div v-if="loginStatus.success" class="success-alert">
+      <div class="success-content">
+        <v-icon icon="mdi-check-circle" color="white" class="mr-2"></v-icon>
+        {{ loginStatus.success }}
+        <v-btn
+          icon="mdi-close"
+          size="small"
+          variant="text"
+          color="white"
+          class="ml-auto"
+          @click="loginStatus.success = ''"
+        ></v-btn>
+      </div>
+    </div>
 
     <!-- Error alert -->
     <v-alert
       v-if="loginStatus.error"
       type="error"
       variant="tonal"
-      class="mx-auto mb-4"
-      max-width="448"
+      class="mx-auto mb-4 alert-container"
       closable
       @click:close="loginStatus.error = ''"
     >
@@ -37,7 +29,7 @@
     </v-alert>
 
     <v-card
-      class="mx-auto pa-12 pb-8 semi-transparent-card"
+      class="mx-auto pa-6 pa-sm-8 pa-md-12 pb-6 pb-sm-8 semi-transparent-card"
       elevation="8"
       max-width="448"
       rounded="lg"
@@ -52,14 +44,16 @@
           placeholder="Email address"
           prepend-inner-icon="mdi-email-outline"
           variant="outlined"
-          class="semi-transparent-textfield"
+          class="semi-transparent-textfield mt-4"
         ></v-text-field>
 
-        <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">
-          Password
+        <div
+          class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between flex-wrap mt-4"
+        >
+          <span>Password</span>
 
           <a
-            class="text-caption text-decoration-none text-blue"
+            class="text-caption text-decoration-none text-blue mt-1 mt-sm-0"
             href="#"
             rel="noopener noreferrer"
             @click.prevent="handleForgotPassword"
@@ -81,8 +75,8 @@
           class="semi-transparent-textfield"
         ></v-text-field>
 
-        <v-card class="mb-12" color="surface-variant" variant="tonal">
-          <v-card-text class="text-medium-emphasis text-caption">
+        <v-card class="mb-6 mb-sm-8 mb-md-12" color="surface-variant" variant="tonal">
+          <v-card-text class="text-medium-emphasis text-caption pa-2 pa-sm-3 pa-md-4">
             Warning: After 3 consecutive failed login attempts, your account will be temporarily
             locked for three hours. If you must login now, you can also click "Forgot login
             password?" below to reset the login password.
@@ -96,7 +90,7 @@
           size="large"
           variant="flat"
           block
-          class="mb-8 rounded-btn"
+          class="mb-4 mb-sm-6 mb-md-8 rounded-btn"
           type="submit"
         >
           Log In
@@ -111,10 +105,10 @@
     </v-card>
 
     <!-- Reset Password Dialog -->
-    <v-dialog v-model="resetDialog" max-width="500px">
+    <v-dialog v-model="resetDialog" max-width="90%" class="reset-dialog">
       <v-card>
-        <v-card-title>Reset Password</v-card-title>
-        <v-card-text>
+        <v-card-title class="text-h6 pa-4">Reset Password</v-card-title>
+        <v-card-text class="pa-4">
           <p class="mb-4">
             Enter your email address and we'll send you a link to reset your password.
           </p>
@@ -125,7 +119,7 @@
             :rules="[rules.required, rules.email]"
           ></v-text-field>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn color="grey" text @click="resetDialog = false">Cancel</v-btn>
           <v-btn
@@ -143,7 +137,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'vue-router'
 
@@ -210,7 +204,7 @@ const handleLogin = async () => {
       // Store user data if needed
       localStorage.setItem('user', JSON.stringify(data.user))
 
-      // ✅ Redirect to dashboard
+      // Redirect to dashboard
       setTimeout(() => {
         router.replace('/postfeed')
       }, 1000)
@@ -253,67 +247,126 @@ const sendPasswordReset = async () => {
     isResetting.value = false
   }
 }
+
+onMounted(() => {
+  // This will run when the component is mounted
+})
 </script>
 
 <style scoped>
-body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
+.login-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
   background-image: url('@/assets/Login2Background.jpg');
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
+}
+
+.alert-container {
+  width: 100%;
+  max-width: 448px;
+}
+
+/* New success alert styling - smaller and solid (not transparent) */
+.success-alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: 300px;
+  width: auto;
+}
+
+.success-content {
+  display: flex;
+  align-items: center;
+  background-color: #4caf50; /* Solid green background */
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 20px;
 }
 
 /* Gradient with transparency */
 .semi-transparent-card {
-  background-color: rgba(255, 255, 255, 0.6); /* 60% opaque white */
-  backdrop-filter: blur(4px); /* optional: adds soft blur for depth */
-}
-
-.v-card {
-  background-color: rgba(255, 255, 255, 0.6); /* 60% opacity white */
-  backdrop-filter: blur(5px); /* Optional: nice blur effect behind the card */
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px); /* For Safari support */
+  width: 100%;
 }
 
 /* Transparent background for text fields */
-.semi-transparent-textfield .v-input__control {
-  background-color: rgba(255, 255, 255, 0.4) !important; /* Transparent background */
-  border: 1px solid rgba(0, 0, 0, 0.3) !important; /* Border color */
+.semi-transparent-textfield :deep(.v-field__outline) {
+  background-color: rgba(255, 255, 255, 0.4) !important;
 }
 
-.semi-transparent-textfield .v-input__slot {
-  background-color: rgba(255, 255, 255, 0.4) !important; /* Transparent background */
-}
-
-/* Optional: make sure text and icons are visible */
-.semi-transparent-textfield .v-input__control .v-input__label {
-  color: rgba(0, 0, 0, 0.87) !important; /* Keep label text dark */
-}
-
-.semi-transparent-textfield .v-input__control .v-text-field__outline {
-  border-color: rgba(0, 0, 0, 0.6) !important; /* Darker border color */
+.semi-transparent-textfield :deep(.v-field__input) {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 
 .login-btn-enabled {
-  background-color: #0d47a1 !important; /* Dark blue */
+  background-color: #0d47a1 !important;
   color: white !important;
   opacity: 1;
-  transition: background-color 0.3s ease; /* Smooth transition for hover */
+  transition: background-color 0.3s ease;
 }
 
 .login-btn-enabled:hover {
-  background-color: #102e50 !important; /* Darker blue on hover */
+  background-color: #102e50 !important;
 }
 
 .login-btn-disabled {
-  background-color: gray !important; /* Light blue */
+  background-color: gray !important;
   color: #b0bec5 !important;
   opacity: 1;
 }
 
 /* Round Button */
 .rounded-btn {
-  border-radius: 50px !important; /* Fully rounded button */
+  border-radius: 50px !important;
+}
+
+/* Reset dialog responsive styling */
+.reset-dialog {
+  margin: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .semi-transparent-card {
+    padding: 1.5rem !important;
+  }
+
+  .login-page-container {
+    padding: 0.5rem;
+  }
+
+  .success-alert {
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 400px) {
+  .semi-transparent-card {
+    padding: 1rem !important;
+  }
+
+  .success-alert {
+    max-width: 200px;
+  }
+}
+
+/* Fix for iOS backdrop-filter */
+@supports not (backdrop-filter: blur(4px)) {
+  .semi-transparent-card {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
 }
 </style>
