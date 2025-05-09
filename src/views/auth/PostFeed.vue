@@ -1553,10 +1553,8 @@ const selectPost = async (post) => {
   selectedPost.value = post
   selectedPostStatus.value = post.status // Set the current status for admin controls
 
-  // Fetch comments for this post if not already loaded
-  if (!postComments.value[post.id]) {
-    await fetchComments(post.id)
-  }
+  // Always fetch fresh comments when selecting a post
+  await fetchComments(post.id)
 }
 
 const addComment = async () => {
@@ -1586,14 +1584,18 @@ const addComment = async () => {
       throw error
     }
 
-    // Add comment to local state
+    // Initialize the comments array if it doesn't exist
     if (!postComments.value[selectedPost.value.id]) {
       postComments.value[selectedPost.value.id] = []
     }
+
+    // Add the new comment to the local state
     postComments.value[selectedPost.value.id].push(comment)
 
     // Reset form
     newComment.text = ''
+
+    console.log('Comment added successfully:', comment)
   } catch (error) {
     console.error('Error adding comment:', error)
     alert('Failed to add comment. Please try again.')
@@ -1932,19 +1934,37 @@ const fetchAllLikes = async () => {
 
 const fetchAllCommentCounts = async () => {
   try {
-    console.log('Fetching comment counts...')
+    console.log('Fetching comments for all posts...')
     const { data: commentsData, error: commentsError } = await supabase
       .from('comments')
-      .select('post_id')
+      .select('*')
+      .order('created_at', { ascending: true })
 
     if (commentsError) {
-      console.error('Error fetching comment counts:', commentsError)
+      console.error('Error fetching comments:', commentsError)
       return
     }
 
     console.log('Comments fetched:', commentsData?.length || 0)
 
-    // Group comments by post_id and count
+    // Extract user IDs from comments with null checks
+    const userIds = []
+    if (commentsData && commentsData.length > 0) {
+      for (const comment of commentsData) {
+        if (comment && comment.user_id) {
+          userIds.push(comment.user_id)
+        }
+      }
+    }
+
+    const uniqueUserIds = [...new Set(userIds)]
+
+    // Fetch user profiles for comment authors
+    if (uniqueUserIds.length > 0) {
+      await fetchUserProfiles(uniqueUserIds)
+    }
+
+    // Group comments by post_id
     const commentsByPost = {}
     if (commentsData && commentsData.length > 0) {
       commentsData.forEach((comment) => {
@@ -1957,9 +1977,12 @@ const fetchAllCommentCounts = async () => {
       })
     }
 
-    postComments.value = commentsByPost
+    // Update state with all comments, preserving any existing comments
+    Object.keys(commentsByPost).forEach((postId) => {
+      postComments.value[postId] = commentsByPost[postId]
+    })
   } catch (error) {
-    console.error('Error fetching comment counts:', error)
+    console.error('Error fetching comments:', error)
   }
 }
 
@@ -1993,7 +2016,12 @@ const fetchComments = async (postId) => {
       await fetchUserProfiles(uniqueUserIds)
     }
 
-    postComments.value[postId] = commentsData
+    // Set comments in state, ensuring we don't overwrite with empty array
+    if (commentsData && commentsData.length > 0) {
+      postComments.value[postId] = commentsData
+    } else if (!postComments.value[postId]) {
+      postComments.value[postId] = []
+    }
   } catch (error) {
     console.error(`Error fetching comments for post ${postId}:`, error)
   }
@@ -2071,10 +2099,37 @@ const setupRealtimeSubscriptions = () => {
   // Set up realtime subscription for comments
   const commentsSubscription = supabase
     .channel('public:comments')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => {
-      if (selectedPost.value) {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, (payload) => {
+      console.log('Comment change detected:', payload)
+
+      // If a new comment is added
+      if (payload.eventType === 'INSERT' && payload.new) {
+        const postId = payload.new.post_id
+
+        // Initialize the comments array if it doesn't exist
+        if (!postComments.value[postId]) {
+          postComments.value[postId] = []
+        }
+
+        // Check if this comment is already in our state to avoid duplicates
+        const commentExists = postComments.value[postId].some((c) => c.id === payload.new.id)
+
+        if (!commentExists) {
+          // Add the new comment to our state
+          postComments.value[postId].push(payload.new)
+
+          // If we need the user profile for this comment
+          if (payload.new.user_id && !userProfiles.value[payload.new.user_id]) {
+            fetchUserProfiles([payload.new.user_id])
+          }
+        }
+      }
+      // For other changes, refresh the specific post's comments
+      else if (selectedPost.value) {
         fetchComments(selectedPost.value.id)
       }
+
+      // Always update comment counts
       fetchAllCommentCounts()
     })
     .subscribe()
